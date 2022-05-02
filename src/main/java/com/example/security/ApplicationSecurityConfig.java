@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import static com.example.security.ApplicationUserRole.*;
 
@@ -29,13 +30,15 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.csrf()
-        .disable()
-        .authorizeRequests()
+    http.csrf().disable()
+       /* .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+        .and()*/
+        /*.disable()*/ .authorizeRequests()
         .antMatchers("/", "index", "/css/*", "/js/*")
         .permitAll()
-        .antMatchers("api/**").hasRole(STUDENT.name())
-/*      .antMatchers(HttpMethod.DELETE, "/management/api/**")
+        .antMatchers("api/**")
+        .hasRole(STUDENT.name())
+        /*      .antMatchers(HttpMethod.DELETE, "/management/api/**")
         .hasAnyAuthority(COURSE_WRITE.getPermission())
         .antMatchers(HttpMethod.PUT, "/management/api/**")
         .hasAnyAuthority(COURSE_WRITE.getPermission())
