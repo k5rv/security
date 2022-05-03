@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.example.security.ApplicationUserRole.*;
 
@@ -30,26 +33,32 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    http.csrf()
-        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+    http
+        .csrf().disable()
+        .authorizeRequests()
+        .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
+        .antMatchers("api/**").hasRole(STUDENT.name())
+        .anyRequest().authenticated()
         .and()
-        /*.disable()*/ .authorizeRequests()
-        .antMatchers("/", "index", "/css/*", "/js/*")
-        .permitAll()
-        .antMatchers("api/**")
-        .hasRole(STUDENT.name())
-        /*      .antMatchers(HttpMethod.DELETE, "/management/api/**")
-        .hasAnyAuthority(COURSE_WRITE.getPermission())
-        .antMatchers(HttpMethod.PUT, "/management/api/**")
-        .hasAnyAuthority(COURSE_WRITE.getPermission())
-        .antMatchers(HttpMethod.POST, "/management/api/**")
-        .hasAnyAuthority(COURSE_WRITE.getPermission())
-        .antMatchers(HttpMethod.GET, "/management/api/**")
-        .hasAnyRole(ADMIN.name(), ADMINTRAINEE.name())*/
-        .anyRequest()
-        .authenticated()
+        .formLogin()
+        .loginPage("/login").permitAll()
+        .passwordParameter("password")
+        .usernameParameter("username")
+        .defaultSuccessUrl("/courses", true)
         .and()
-        .httpBasic();
+        .rememberMe()
+            .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+            .key("quite_secure_huh?x*^+3ER=p4bGp7s22_ffh9cqYwyc6YAa9H2x")
+            .rememberMeParameter("remember-me")
+        .and()
+        .logout()
+            .logoutUrl("/logout")
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+            .clearAuthentication(true)
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID", "remember-me")
+            .logoutSuccessUrl("/login");
+
   }
 
   @Override
